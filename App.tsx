@@ -1,4 +1,4 @@
-
+// Main Application Entry
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { SessionState } from './types';
