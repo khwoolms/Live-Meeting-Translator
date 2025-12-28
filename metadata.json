@@ -1,0 +1,8 @@
+
+{
+  "name": "Live Voice Translator (KR-EN)",
+  "description": "A real-time, low-latency speech-to-speech translator between Korean and English using Gemini Live API.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
