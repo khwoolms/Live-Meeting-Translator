@@ -1,52 +1,35 @@
-
-export function encode(bytes: Uint8Array): string {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
+export const createPcmBlob = (channelData: Float32Array): Blob => {
+  // Float32Array를 Int16Array(PCM)로 변환
+  const pcmData = new Int16Array(channelData.length);
+  for (let i = 0; i < channelData.length; i++) {
+    // -1 ~ 1 사이로 클램핑
+    const s = Math.max(-1, Math.min(1, channelData[i]));
+    // 16비트 정수로 변환
+    pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
   }
-  return btoa(binary);
-}
+  return new Blob([pcmData], { type: 'audio/pcm' });
+};
 
-export function decode(base64: string): Uint8Array {
-  const binaryString = atob(base64);
+export const decode = (base64: string): ArrayBuffer => {
+  const binaryString = window.atob(base64);
   const len = binaryString.length;
   const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-  return bytes;
-}
+  return bytes.buffer;
+};
 
-export async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-    }
+export const decodeAudioData = async (
+  audioData: ArrayBuffer,
+  audioContext: AudioContext,
+  sampleRate: number = 24000
+): Promise<AudioBuffer> => {
+  const pcm16 = new Int16Array(audioData);
+  const audioBuffer = audioContext.createBuffer(1, pcm16.length, sampleRate);
+  const channelData = audioBuffer.getChannelData(0);
+  for (let i = 0; i < pcm16.length; i++) {
+    channelData[i] = pcm16[i] / 32768.0;
   }
-  return buffer;
-}
-
-export function createPcmBlob(data: Float32Array): { data: string; mimeType: string } {
-  const l = data.length;
-  const int16 = new Int16Array(l);
-  for (let i = 0; i < l; i++) {
-    // Math.max/min을 이용해 안전하게 클램핑
-    const s = Math.max(-1, Math.min(1, data[i]));
-    int16[i] = s * 32768;
-  }
-  return {
-    data: encode(new Uint8Array(int16.buffer)),
-    mimeType: 'audio/pcm;rate=16000',
-  };
-}
+  return audioBuffer;
+};
