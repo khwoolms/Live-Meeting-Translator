@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './Main'; // Import from Main.tsx
+import App from './Main'; // Use Main.tsx as entry point
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
